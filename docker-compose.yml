@@ -1,0 +1,33 @@
+# PostgreSQL + pgvector for the Eliozo Flask app (local workstation).
+#
+# The pgvector/pgvector:pg16 image ships the `vector` extension pre-built, so
+# no compilation is needed on macOS (colima) or on the Ubuntu server.
+#
+# All values come from the sibling `.env` file (never committed). docker compose
+# auto-loads `.env` from this directory for ${VAR} substitution below.
+#
+#   docker compose up -d      # start in the background
+#   docker compose down       # stop (data survives in the named volume)
+#   docker compose down -v    # stop AND delete the data volume
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: eliozo-db
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

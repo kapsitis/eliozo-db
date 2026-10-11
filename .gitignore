@@ -1,0 +1,7 @@
+# Local secrets — never commit (contains DB_PASSWORD and OPENAI_API_KEY)
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
