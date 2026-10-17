@@ -20,6 +20,9 @@ docker compose up -d            # start PostgreSQL 16 + pgvector on :5432
 VENV=~/workspace/worksheet-generation-with-llms/wsheet-env/bin/python
 $VENV -m alembic upgrade head   # create extension, tables, HNSW indexes
 $VENV seed_test_data.py         # optional: a few rows with DUMMY embeddings
+# or load every problem from the Flask app's RDF store (see
+# qualification-project/eliozoapp/eliozo_dao/README.md, "Search by meaning"):
+#   python -m eliozo_dao.postgres.load_problems [--embeddings openai]
 
 docker exec -it eliozo-db psql -U appuser -d eliozo   # ad-hoc SQL
 ```
