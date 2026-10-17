@@ -5,3 +5,6 @@
 __pycache__/
 *.pyc
 .venv/
+
+# pg_export_problems.py output
+*.dump

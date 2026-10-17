@@ -5,3 +5,4 @@ pgvector>=0.3               # SQLAlchemy + psycopg3 type adapter
 openai>=1.0
 python-dotenv>=1.0
 alembic>=1.13               # schema migrations
+rdflib>=7.0               # scripts/index_problems.py reads the TTL files

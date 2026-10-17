@@ -37,6 +37,13 @@ docker exec -it eliozo-db psql -U appuser -d eliozo   # ad-hoc SQL
 | `requirements.txt` | Python deps (installed into `wsheet-env`) |
 | `alembic.ini`, `alembic/` | schema migrations; `env.py` builds the URL from `.env` |
 | `seed_test_data.py` | sanity rows parsed from `math/problembase`, random embeddings |
+| `scripts/index_problems.py` | load problems/solutions from TTL files and embed them with OpenAI (resumable, incremental) |
+| `scripts/search_problems.py` | command-line similarity search over the index |
+| `scripts/pg_export_problems.py`, `scripts/pg_import_problems.py` | dump / restore the index incl. vectors; native `pg_dump` or Docker, any OS |
+
+The server (native PostgreSQL) setup, indexing and dump workflow are in
+`../eliozo-setup/REQUEST019-postgres-server-indexing.md` and the
+*PostgreSQL + pgvector* section of `../eliozo-setup/ADMIN-GUIDE.md`.
 
 ## Stop / wipe
 
