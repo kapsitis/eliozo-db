@@ -38,17 +38,23 @@ def load_env():
 
 
 def db_settings():
-    """{'host', 'port', 'name', 'user', 'password'} from DB_* (after ``load_env``)."""
+    """{'host', 'port', 'name', 'user', 'password'} from DB_* (after ``load_env``).
+
+    Without a ``.env`` file the variables come from the environment alone (the
+    Jenkins export job). DB_PASSWORD may then be empty: with DB_HOST set to the
+    socket directory (``/var/run/postgresql``) the server authenticates the OS
+    user by peer authentication instead.
+    """
     load_env()
-    missing = [k for k in ('DB_NAME', 'DB_USER', 'DB_PASSWORD') if not os.environ.get(k)]
+    missing = [k for k in ('DB_NAME', 'DB_USER') if not os.environ.get(k)]
     if missing:
-        raise SystemExit('missing in %s: %s' % (env_file(), ', '.join(missing)))
+        raise SystemExit('missing in %s or the environment: %s' % (env_file(), ', '.join(missing)))
     return {
         'host': os.environ.get('DB_HOST', 'localhost'),
         'port': os.environ.get('DB_PORT', '5432'),
         'name': os.environ['DB_NAME'],
         'user': os.environ['DB_USER'],
-        'password': os.environ['DB_PASSWORD'],
+        'password': os.environ.get('DB_PASSWORD', ''),
     }
 
 
@@ -56,5 +62,5 @@ def sqlalchemy_url():
     """A psycopg 3 SQLAlchemy URL (needs SQLAlchemy installed)."""
     from sqlalchemy.engine import URL
     s = db_settings()
-    return URL.create('postgresql+psycopg', username=s['user'], password=s['password'],
+    return URL.create('postgresql+psycopg', username=s['user'], password=s['password'] or None,
                       host=s['host'], port=int(s['port']), database=s['name'])

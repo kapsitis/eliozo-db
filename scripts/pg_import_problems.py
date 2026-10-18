@@ -6,13 +6,16 @@ Usage:
 DROPS and recreates ``problems``, ``solution_chunks`` and ``alembic_version``
 in the target database (one transaction: on any error nothing changes), then
 loads the dumped rows, embeddings included, so nothing has to be re-embedded.
-The target database must already exist with the ``vector`` extension (server:
-``eliozo-setup/scripts/setup-postgresql.sh``; Docker: ``alembic upgrade head``
-once). Restored objects are owned by the DB_USER of ``.env``.
+The target database must already exist. A missing ``vector`` extension is
+created, which works where DB_USER is a superuser (the Docker image's
+POSTGRES_USER), so a freshly started container needs no ``alembic upgrade``
+first; on the server ``eliozo-setup/scripts/setup-postgresql.sh`` creates it.
+Restored objects are owned by the DB_USER of ``.env``.
 """
 
 import argparse
 import os
+import subprocess
 import sys
 
 from pgtools import Postgres, add_arguments, counts
@@ -31,8 +34,15 @@ def main(argv=None):
 
     pg = Postgres(args.mode, args.container)
     if pg.query("SELECT count(*) FROM pg_extension WHERE extname = 'vector'") != '1':
-        sys.exit('ERROR: extension "vector" is not installed in database %s; '
-                 'create it first (see the docstring)' % pg.s['name'])
+        # A fresh Docker container: its POSTGRES_USER is a superuser and may
+        # create the extension. On the server appuser may not (setup-postgresql.sh
+        # creates it there), so a failure is reported, not ignored.
+        print('Extension "vector" is missing; creating it ...')
+        r = subprocess.run(pg.command('psql', '-X', '-q', '-c', 'CREATE EXTENSION IF NOT EXISTS vector'),
+                           env=pg.env)
+        if r.returncode != 0:
+            sys.exit('ERROR: could not create extension "vector" in database %s; a superuser '
+                     'must run CREATE EXTENSION vector there first' % pg.s['name'])
     has_tables = pg.query("SELECT to_regclass('public.problems') IS NOT NULL") == 't'
     if has_tables:
         print('Current contents:', counts(pg))

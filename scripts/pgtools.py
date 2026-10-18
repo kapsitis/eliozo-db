@@ -11,7 +11,8 @@ library only. Two ways to reach the database:
 
 ``auto`` picks ``docker`` when that container is running, else ``native``.
 The password is passed in the PGPASSWORD environment variable, never on a
-command line.
+command line. With an empty DB_PASSWORD and DB_HOST=/var/run/postgresql the
+native tools use the Unix socket and peer authentication (the Jenkins job).
 """
 
 import os
@@ -54,7 +55,9 @@ class Postgres:
             for tool in ('pg_dump', 'pg_restore', 'psql'):
                 if not shutil.which(tool):
                     sys.exit('%s not found on PATH (Ubuntu: apt install postgresql-client-16)' % tool)
-        self.env = dict(os.environ, PGPASSWORD=self.s['password'])
+        self.env = dict(os.environ)
+        if self.s['password']:
+            self.env['PGPASSWORD'] = self.s['password']
         print('PostgreSQL via %s%s, database %s, user %s' % (
             mode, ' (container %s)' % container if mode == 'docker' else
             ' (%s:%s)' % (self.s['host'], self.s['port']), self.s['name'], self.s['user']))
